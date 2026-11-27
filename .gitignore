@@ -1,5 +1,6 @@
 # Verilator / Simulation build artifacts
 obj_dir/
+*.vvp
 *.vcd
 *.fst
 *.ghw
