@@ -1,7 +1,8 @@
-// Top-Level Single-Cycle RISC-V CPU (addi + bne subset, Lecture 7 Slide 24).
+// Top-Level Single-Cycle RISC-V CPU (addi, bne, lbu/lw, sb/sw subset).
 module top #(
     parameter DATA_WIDTH = 32,
-    parameter MEM_FILE   = "rom/program.hex"
+    parameter MEM_FILE   = "rom/program.hex",
+    parameter DATA_FILE  = "rom/sinerom.mem"
 ) (
     input  logic                  clk,
     input  logic                  rst,
@@ -15,12 +16,17 @@ module top #(
     logic [DATA_WIDTH-1:0] reg_op2;
     logic [DATA_WIDTH-1:0] alu_op2;
     logic [DATA_WIDTH-1:0] alu_out;
+    logic [DATA_WIDTH-1:0] read_data;
+    logic [DATA_WIDTH-1:0] result;
 
     logic       reg_write;
     logic [2:0] alu_ctrl;
     logic       alu_src;
     logic [1:0] imm_src;
     logic       pc_src;
+    logic       mem_write;
+    logic       result_src;
+    logic       byte_mode;
     logic       eq;
 
     logic [4:0] rs1;
@@ -58,13 +64,16 @@ module top #(
     );
 
     control_unit u_control_unit (
-        .instr     (instr),
-        .eq        (eq),
-        .reg_write (reg_write),
-        .alu_ctrl  (alu_ctrl),
-        .alu_src   (alu_src),
-        .imm_src   (imm_src),
-        .pc_src    (pc_src)
+        .instr      (instr),
+        .eq         (eq),
+        .reg_write  (reg_write),
+        .alu_ctrl   (alu_ctrl),
+        .alu_src    (alu_src),
+        .imm_src    (imm_src),
+        .pc_src     (pc_src),
+        .mem_write  (mem_write),
+        .result_src (result_src),
+        .byte_mode  (byte_mode)
     );
 
     reg_file #(
@@ -76,7 +85,7 @@ module top #(
         .ad2 (rs2),
         .ad3 (rd),
         .we3 (reg_write),
-        .wd3 (alu_out),
+        .wd3 (result),
         .rd1 (reg_op1),
         .rd2 (reg_op2),
         .a0  (a0)
@@ -93,5 +102,21 @@ module top #(
         .alu_out  (alu_out),
         .eq       (eq)
     );
+
+    data_mem #(
+        .ADDR_WIDTH(DATA_WIDTH),
+        .DATA_WIDTH(DATA_WIDTH),
+        .MEM_DEPTH (256),
+        .DATA_FILE (DATA_FILE)
+    ) u_data_mem (
+        .clk        (clk),
+        .mem_write  (mem_write),
+        .byte_mode  (byte_mode),
+        .addr       (alu_out),
+        .write_data (reg_op2),
+        .read_data  (read_data)
+    );
+
+    assign result = result_src ? read_data : alu_out;
 
 endmodule

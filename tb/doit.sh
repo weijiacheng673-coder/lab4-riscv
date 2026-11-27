@@ -16,6 +16,7 @@ verilator -Wall --cc --trace \
     rtl/control_unit.sv \
     rtl/reg_file.sv \
     rtl/alu.sv \
+    rtl/data_mem.sv \
     rtl/top.sv \
     --top-module top \
     --exe tb/cpu_tb.cpp

@@ -6,7 +6,10 @@ module control_unit (
     output logic [2:0]  alu_ctrl,
     output logic        alu_src,
     output logic [1:0]  imm_src,
-    output logic        pc_src
+    output logic        pc_src,
+    output logic        mem_write,
+    output logic        result_src,
+    output logic        byte_mode
 );
 
     logic [6:0] op;
@@ -16,13 +19,50 @@ module control_unit (
     assign funct3 = instr[14:12];
 
     always_comb begin
-        reg_write = 1'b0;
-        alu_ctrl  = 3'b000;
-        alu_src   = 1'b0;
-        imm_src   = 2'b00;
-        pc_src    = 1'b0;
+        reg_write  = 1'b0;
+        alu_ctrl   = 3'b000;
+        alu_src    = 1'b0;
+        imm_src    = 2'b00;
+        pc_src     = 1'b0;
+        mem_write  = 1'b0;
+        result_src = 1'b0;
+        byte_mode  = 1'b0;
 
         case (op)
+            7'b0000011: begin
+                // I-type Load (lw / lbu)
+                if (funct3 == 3'b010) begin
+                    reg_write  = 1'b1;
+                    alu_src    = 1'b1;
+                    imm_src    = 2'b00;
+                    alu_ctrl   = 3'b000;
+                    result_src = 1'b1;
+                    byte_mode  = 1'b0;
+                end else if (funct3 == 3'b100) begin
+                    reg_write  = 1'b1;
+                    alu_src    = 1'b1;
+                    imm_src    = 2'b00;
+                    alu_ctrl   = 3'b000;
+                    result_src = 1'b1;
+                    byte_mode  = 1'b1;
+                end
+            end
+            7'b0100011: begin
+                // S-type Store (sw / sb)
+                if (funct3 == 3'b010) begin
+                    mem_write = 1'b1;
+                    alu_src   = 1'b1;
+                    imm_src   = 2'b01;
+                    alu_ctrl  = 3'b000;
+                    byte_mode = 1'b0;
+                end else if (funct3 == 3'b000) begin
+                    mem_write = 1'b1;
+                    alu_src   = 1'b1;
+                    imm_src   = 2'b01;
+                    alu_ctrl  = 3'b000;
+                    byte_mode = 1'b1;
+                end
+            end
             7'b0010011: begin
                 // I-type ALU (addi)
                 if (funct3 == 3'b000) begin
