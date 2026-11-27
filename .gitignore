@@ -1,0 +1,23 @@
+# Verilator / Simulation build artifacts
+obj_dir/
+*.vcd
+*.fst
+*.ghw
+*.gtkw
+*.log
+
+# Compiled binaries & object files
+*.o
+*.a
+*.so
+*.exe
+*.out
+*.elf
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
